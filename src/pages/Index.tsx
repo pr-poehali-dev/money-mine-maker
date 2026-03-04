@@ -2,14 +2,18 @@ import { useState, useMemo } from 'react';
 import { bots, botTypes, riskLevels, sortOptions } from '@/data/bots';
 import BotCard from '@/components/BotCard';
 import StatsSection from '@/components/StatsSection';
+import PracticeSection from '@/components/PracticeSection';
+import BotBuilderSection from '@/components/BotBuilderSection';
 import Icon from '@/components/ui/icon';
+
+type Tab = 'catalog' | 'stats' | 'practice' | 'builder';
 
 export default function Index() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
   const [sort, setSort] = useState('popular');
-  const [activeTab, setActiveTab] = useState<'catalog' | 'stats'>('catalog');
+  const [activeTab, setActiveTab] = useState<Tab>('catalog');
 
   const filtered = useMemo(() => {
     let result = [...bots];
@@ -55,21 +59,22 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="flex bg-white/5 rounded-xl p-1 border border-white/8">
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'catalog' ? 'bg-[#00f5a0] text-black' : 'text-white/60 hover:text-white'}`}
-            >
-              <Icon name="LayoutGrid" size={14} />
-              Каталог
-            </button>
-            <button
-              onClick={() => setActiveTab('stats')}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'stats' ? 'bg-[#00f5a0] text-black' : 'text-white/60 hover:text-white'}`}
-            >
-              <Icon name="BarChart3" size={14} />
-              Статистика
-            </button>
+          <div className="flex bg-white/5 rounded-xl p-1 border border-white/8 overflow-x-auto">
+            {([
+              { id: 'catalog', label: 'Каталог', icon: 'LayoutGrid' },
+              { id: 'practice', label: 'Практика', icon: 'FlaskConical' },
+              { id: 'builder', label: 'Конструктор', icon: 'Wrench' },
+              { id: 'stats', label: 'Статистика', icon: 'BarChart3' },
+            ] as { id: Tab; label: string; icon: string }[]).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-[#00f5a0] text-black' : 'text-white/60 hover:text-white'}`}
+              >
+                <Icon name={tab.icon} size={13} fallback="Circle" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
           </div>
 
           <button className="btn-glow hidden md:flex items-center gap-2 bg-[#00f5a0] text-black text-sm font-bold px-4 py-2 rounded-xl">
@@ -231,6 +236,10 @@ export default function Index() {
             </div>
           </div>
         </>
+      ) : activeTab === 'practice' ? (
+        <PracticeSection />
+      ) : activeTab === 'builder' ? (
+        <BotBuilderSection />
       ) : (
         <StatsSection />
       )}
