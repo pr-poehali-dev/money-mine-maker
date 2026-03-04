@@ -29,6 +29,9 @@ export default function BotCard({ bot, style }: BotCardProps) {
 
       {/* badges */}
       <div className="absolute top-4 right-4 flex gap-1.5 z-10">
+        {bot.author === 'Мой бот' && (
+          <span className="tag bg-cyan-400/15 text-cyan-400 border border-cyan-400/25">⚙️ Мой</span>
+        )}
         {bot.isPopular && (
           <span className="tag bg-amber-400/15 text-amber-400 border border-amber-400/25">🔥 Топ</span>
         )}

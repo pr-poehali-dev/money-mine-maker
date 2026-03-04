@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
+import { useBots } from '@/context/BotsContext';
+import { Bot, BotType, RiskLevel } from '@/data/bots';
 
 type Step = 'basics' | 'strategy' | 'risk' | 'signals' | 'preview';
 
@@ -91,7 +93,34 @@ function estimateRisk(config: BotConfig) {
   return s.risk;
 }
 
-export default function BotBuilderSection() {
+const STRATEGY_TYPE_MAP: Record<string, BotType> = {
+  grid: 'grid',
+  scalp: 'scalping',
+  trend: 'trend',
+  reversal: 'swing',
+  dca: 'swing',
+  breakout: 'trend',
+};
+
+const STRATEGY_RISK_MAP: Record<string, RiskLevel> = {
+  grid: 'low',
+  scalp: 'medium',
+  trend: 'medium',
+  reversal: 'high',
+  dca: 'low',
+  breakout: 'high',
+};
+
+const GRADIENTS = [
+  'from-emerald-500/20 to-cyan-500/20',
+  'from-purple-500/20 to-pink-500/20',
+  'from-blue-500/20 to-indigo-500/20',
+  'from-orange-500/20 to-yellow-500/20',
+  'from-teal-500/20 to-green-500/20',
+];
+
+export default function BotBuilderSection({ onGoToCatalog }: { onGoToCatalog?: () => void }) {
+  const { addBot } = useBots();
   const [step, setStep] = useState<Step>('basics');
   const [config, setConfig] = useState<BotConfig>(DEFAULT_CONFIG);
   const [saved, setSaved] = useState(false);
@@ -115,8 +144,29 @@ export default function BotBuilderSection() {
   };
 
   const handleSave = () => {
+    if (saved) return;
+    const strategy = STRATEGIES.find(s => s.id === config.strategy);
+    const newBot: Bot = {
+      id: Date.now(),
+      name: config.name,
+      description: `Стратегия: ${strategy?.name}. Пара: ${config.pair}, таймфрейм ${config.timeframe}. Индикаторы: ${config.indicators.join(', ').toUpperCase()}. SL: -${config.stopLoss}%, TP: +${config.takeProfit}%.`,
+      type: STRATEGY_TYPE_MAP[config.strategy] ?? 'trend',
+      risk: STRATEGY_RISK_MAP[config.strategy] ?? 'medium',
+      roi: estimateRoi(config),
+      winRate: 55 + config.indicators.length * 3,
+      trades: 0,
+      price: 0,
+      rating: 0,
+      reviews: 0,
+      author: 'Мой бот',
+      tags: [config.pair.split('/')[0], config.timeframe, ...config.indicators],
+      exchanges: [config.exchange],
+      isNew: true,
+      gradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
+      emoji: strategy?.emoji ?? '🤖',
+    };
+    addBot(newBot);
     setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
@@ -484,22 +534,35 @@ export default function BotBuilderSection() {
                     ))}
                   </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleSave}
-                      className="flex-1 btn-glow bg-[#00f5a0] text-black font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"
-                    >
-                      {saved ? '✅ Сохранено!' : (
-                        <>
-                          <Icon name="Save" size={15} />
-                          Сохранить бота
-                        </>
-                      )}
-                    </button>
-                    <button className="flex-1 glass-card text-white/70 hover:text-white font-medium py-3 rounded-xl text-sm transition-colors">
-                      Тестировать
-                    </button>
-                  </div>
+                  {saved ? (
+                    <div className="space-y-3">
+                      <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 text-center">
+                        <div className="text-2xl mb-1">🎉</div>
+                        <div className="text-sm font-bold text-emerald-400 mb-0.5">Бот сохранён в каталог!</div>
+                        <div className="text-xs text-white/40">Найди его в разделе «Каталог»</div>
+                      </div>
+                      <button
+                        onClick={onGoToCatalog}
+                        className="w-full btn-glow bg-[#00f5a0] text-black font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"
+                      >
+                        <Icon name="LayoutGrid" size={15} />
+                        Перейти в каталог
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSave}
+                        className="flex-1 btn-glow bg-[#00f5a0] text-black font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"
+                      >
+                        <Icon name="Save" size={15} />
+                        Сохранить в каталог
+                      </button>
+                      <button className="flex-1 glass-card text-white/70 hover:text-white font-medium py-3 rounded-xl text-sm transition-colors">
+                        Тестировать
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

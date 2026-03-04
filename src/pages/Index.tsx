@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { bots, botTypes, riskLevels, sortOptions } from '@/data/bots';
+import { botTypes, riskLevels, sortOptions } from '@/data/bots';
+import { useBots } from '@/context/BotsContext';
 import BotCard from '@/components/BotCard';
 import StatsSection from '@/components/StatsSection';
 import PracticeSection from '@/components/PracticeSection';
@@ -9,6 +10,7 @@ import Icon from '@/components/ui/icon';
 type Tab = 'catalog' | 'stats' | 'practice' | 'builder';
 
 export default function Index() {
+  const { bots } = useBots();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
@@ -195,6 +197,28 @@ export default function Index() {
           {/* catalog grid */}
           <div className="px-4 pb-20">
             <div className="max-w-6xl mx-auto">
+              {/* my bots strip */}
+              {bots.filter(b => b.author === 'Мой бот').length > 0 && !search && typeFilter === 'all' && riskFilter === 'all' && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-cyan-400">⚙️ Мои боты</span>
+                      <span className="tag bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 text-xs">{bots.filter(b => b.author === 'Мой бот').length}</span>
+                    </div>
+                    <button onClick={() => setActiveTab('builder')} className="text-xs text-white/40 hover:text-[#00f5a0] transition-colors flex items-center gap-1">
+                      <Icon name="Plus" size={12} />
+                      Создать ещё
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {bots.filter(b => b.author === 'Мой бот').map((bot, i) => (
+                      <BotCard key={bot.id} bot={bot} style={{ animationDelay: `${i * 60}ms` }} />
+                    ))}
+                  </div>
+                  <div className="border-t border-white/5 mt-6 mb-6" />
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-5">
                 <div className="text-white/50 text-sm">
                   Найдено <span className="text-white font-bold">{filtered.length}</span> {filtered.length === 1 ? 'бот' : filtered.length < 5 ? 'бота' : 'ботов'}
@@ -239,7 +263,7 @@ export default function Index() {
       ) : activeTab === 'practice' ? (
         <PracticeSection />
       ) : activeTab === 'builder' ? (
-        <BotBuilderSection />
+        <BotBuilderSection onGoToCatalog={() => setActiveTab('catalog')} />
       ) : (
         <StatsSection />
       )}
