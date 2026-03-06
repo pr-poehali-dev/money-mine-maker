@@ -4,6 +4,7 @@ import Icon from '@/components/ui/icon';
 interface BotCardProps {
   bot: Bot;
   style?: React.CSSProperties;
+  onClick?: (bot: Bot) => void;
 }
 
 const riskColors = {
@@ -18,11 +19,12 @@ const riskDot = {
   high: 'bg-rose-400',
 };
 
-export default function BotCard({ bot, style }: BotCardProps) {
+export default function BotCard({ bot, style, onClick }: BotCardProps) {
   return (
     <div
       className="glass-card rounded-2xl p-5 card-hover cursor-pointer relative overflow-hidden group"
       style={style}
+      onClick={() => onClick?.(bot)}
     >
       {/* gradient bg */}
       <div className={`absolute inset-0 bg-gradient-to-br ${bot.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
@@ -104,7 +106,11 @@ export default function BotCard({ bot, style }: BotCardProps) {
                 <>${bot.price}<span className="text-xs font-normal text-white/40">/мес</span></>
               )}
             </span>
-            <button className="btn-glow bg-[var(--neon-green)] text-black text-xs font-bold px-3 py-1.5 rounded-lg">
+            <button
+              onClick={e => { e.stopPropagation(); onClick?.(bot); }}
+              className="btn-glow bg-[var(--neon-green)] text-black text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+            >
+              <Icon name="Zap" size={12} />
               Купить
             </button>
           </div>

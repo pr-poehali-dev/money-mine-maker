@@ -1,7 +1,11 @@
 import { useState, useMemo } from 'react';
-import { botTypes, riskLevels, sortOptions } from '@/data/bots';
+import { Bot, botTypes, riskLevels, sortOptions } from '@/data/bots';
 import { useBots } from '@/context/BotsContext';
+import { useCart } from '@/context/CartContext';
 import BotCard from '@/components/BotCard';
+import BotModal from '@/components/BotModal';
+import CheckoutModal from '@/components/CheckoutModal';
+import ExchangeConnectModal from '@/components/ExchangeConnectModal';
 import StatsSection from '@/components/StatsSection';
 import PracticeSection from '@/components/PracticeSection';
 import BotBuilderSection from '@/components/BotBuilderSection';
@@ -11,11 +15,17 @@ type Tab = 'catalog' | 'stats' | 'practice' | 'builder';
 
 export default function Index() {
   const { bots } = useBots();
+  const { count: cartCount } = useCart();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
   const [sort, setSort] = useState('popular');
   const [activeTab, setActiveTab] = useState<Tab>('catalog');
+
+  const [selectedBot, setSelectedBot] = useState<Bot | null>(null);
+  const [checkoutBot, setCheckoutBot] = useState<Bot | null>(null);
+  const [connectBot, setConnectBot] = useState<Bot | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let result = [...bots];
@@ -79,10 +89,23 @@ export default function Index() {
             ))}
           </div>
 
-          <button className="btn-glow hidden md:flex items-center gap-2 bg-[#00f5a0] text-black text-sm font-bold px-4 py-2 rounded-xl">
-            <Icon name="Plus" size={16} />
-            Добавить бота
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <Icon name="ShoppingCart" size={18} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--neon-green)] text-black text-[10px] font-black flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+            <button className="btn-glow hidden md:flex items-center gap-2 bg-[#00f5a0] text-black text-sm font-bold px-4 py-2 rounded-xl">
+              <Icon name="Plus" size={16} />
+              Добавить бота
+            </button>
+          </div>
         </div>
       </header>
 
@@ -212,7 +235,7 @@ export default function Index() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {bots.filter(b => b.author === 'Мой бот').map((bot, i) => (
-                      <BotCard key={bot.id} bot={bot} style={{ animationDelay: `${i * 60}ms` }} />
+                      <BotCard key={bot.id} bot={bot} style={{ animationDelay: `${i * 60}ms` }} onClick={setSelectedBot} />
                     ))}
                   </div>
                   <div className="border-t border-white/5 mt-6 mb-6" />
@@ -241,6 +264,7 @@ export default function Index() {
                       key={bot.id}
                       bot={bot}
                       style={{ animationDelay: `${i * 60}ms` }}
+                      onClick={setSelectedBot}
                     />
                   ))}
                 </div>
@@ -267,6 +291,28 @@ export default function Index() {
       ) : (
         <StatsSection />
       )}
+
+      {/* modals */}
+      <BotModal
+        bot={selectedBot}
+        onClose={() => setSelectedBot(null)}
+        onCheckout={bot => { setSelectedBot(null); setCheckoutBot(bot); }}
+        onConnect={bot => { setSelectedBot(null); setConnectBot(bot); }}
+      />
+      <CheckoutModal
+        bot={checkoutBot}
+        onClose={() => { setCheckoutBot(null); setCartOpen(false); }}
+      />
+      {cartOpen && !checkoutBot && (
+        <CheckoutModal
+          bot={null}
+          onClose={() => setCartOpen(false)}
+        />
+      )}
+      <ExchangeConnectModal
+        bot={connectBot}
+        onClose={() => setConnectBot(null)}
+      />
 
       {/* footer */}
       <footer className="border-t border-white/5 py-8 px-4">
