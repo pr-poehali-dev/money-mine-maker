@@ -13,6 +13,7 @@ const EXCHANGES = [
   { id: 'okx', name: 'OKX', emoji: '⚫' },
   { id: 'kucoin', name: 'KuCoin', emoji: '🟢' },
   { id: 'gate', name: 'Gate.io', emoji: '🔵' },
+  { id: 'pocket_option', name: 'Pocket Option', emoji: '💜' },
 ];
 
 type Step = 'select' | 'keys' | 'done';
