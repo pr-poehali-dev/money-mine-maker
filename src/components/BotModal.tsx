@@ -22,9 +22,23 @@ const riskDot = {
   high: 'bg-rose-400',
 };
 
+function highlight(code: string) {
+  return code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/(#[^\n]*)/g, '<span style="color:#6a9955">$1</span>')
+    .replace(/\b(import|from|def|if|elif|else|while|for|in|return|and|or|not|True|False|None|class|with|as|pass|break|continue|lambda|try|except|raise|yield|global|nonlocal|del|is)\b/g, '<span style="color:#569cd6">$1</span>')
+    .replace(/('[^']*'|"[^"]*")/g, '<span style="color:#ce9178">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g, '<span style="color:#b5cea8">$1</span>')
+    .replace(/\b([A-Z_][A-Z0-9_]{2,})\b/g, '<span style="color:#9cdcfe">$1</span>');
+}
+
 export default function BotModal({ bot, onClose, onCheckout, onConnect }: BotModalProps) {
   const { addToCart, items } = useCart();
   const [addedToCart, setAddedToCart] = useState(false);
+  const [tab, setTab] = useState<'overview' | 'code'>('overview');
+  const [copied, setCopied] = useState(false);
 
   if (!bot) return null;
 
@@ -36,15 +50,19 @@ export default function BotModal({ bot, onClose, onCheckout, onConnect }: BotMod
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(bot.codeSnippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      {/* modal */}
-      <div className="relative w-full max-w-lg bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
+      <div className="relative w-full max-w-lg bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
         {/* gradient header */}
-        <div className={`relative h-32 bg-gradient-to-br ${bot.gradient} opacity-80`}>
+        <div className={`relative h-32 bg-gradient-to-br ${bot.gradient} opacity-80 flex-shrink-0`}>
           <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117] to-transparent" />
           <button
             onClick={onClose}
@@ -63,96 +81,128 @@ export default function BotModal({ bot, onClose, onCheckout, onConnect }: BotMod
           </div>
         </div>
 
-        <div className="p-5 space-y-5">
-          {/* description */}
-          <p className="text-sm text-white/60 leading-relaxed">{bot.description}</p>
+        {/* tabs */}
+        <div className="flex border-b border-white/10 flex-shrink-0">
+          <button
+            onClick={() => setTab('overview')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${tab === 'overview' ? 'text-white border-b-2 border-[var(--neon-green)]' : 'text-white/40 hover:text-white/70'}`}
+          >
+            Обзор
+          </button>
+          <button
+            onClick={() => setTab('code')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${tab === 'code' ? 'text-white border-b-2 border-[var(--neon-green)]' : 'text-white/40 hover:text-white/70'}`}
+          >
+            <Icon name="Code2" size={14} />
+            Python код
+          </button>
+        </div>
 
-          {/* stats */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold font-display gradient-text">+{bot.roi}%</div>
-              <div className="text-[10px] text-white/40 mt-0.5">ROI / год</div>
-            </div>
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold font-display text-white">{bot.winRate}%</div>
-              <div className="text-[10px] text-white/40 mt-0.5">Точность</div>
-            </div>
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold font-display text-white">{bot.trades.toLocaleString('ru')}</div>
-              <div className="text-[10px] text-white/40 mt-0.5">Сделок</div>
-            </div>
-          </div>
+        {/* scrollable content */}
+        <div className="overflow-y-auto flex-1">
+          {tab === 'overview' ? (
+            <div className="p-5 space-y-5">
+              <p className="text-sm text-white/60 leading-relaxed">{bot.description}</p>
 
-          {/* tags */}
-          <div className="flex flex-wrap gap-2">
-            <span className="tag bg-white/5 text-white/50 border border-white/8">{typeLabels[bot.type]}</span>
-            <span className={`tag border ${riskColors[bot.risk]}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${riskDot[bot.risk]} mr-1.5`} />
-              {riskLabels[bot.risk]} риск
-            </span>
-            {bot.exchanges.map(ex => (
-              <span key={ex} className="tag bg-white/5 text-white/40 border border-white/8">{ex}</span>
-            ))}
-            {bot.tags.map(t => (
-              <span key={t} className="tag bg-white/5 text-white/40 border border-white/8">{t}</span>
-            ))}
-          </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <div className="text-xl font-bold font-display gradient-text">+{bot.roi}%</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">ROI / год</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <div className="text-xl font-bold font-display text-white">{bot.winRate}%</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">Точность</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <div className="text-xl font-bold font-display text-white">{bot.trades.toLocaleString('ru')}</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">Сделок</div>
+                </div>
+              </div>
 
-          {/* rating */}
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <div className="flex">
-                {[1,2,3,4,5].map(s => (
-                  <span key={s} className={`text-sm ${s <= Math.round(bot.rating) ? 'text-amber-400' : 'text-white/15'}`}>★</span>
+              <div className="flex flex-wrap gap-2">
+                <span className="tag bg-white/5 text-white/50 border border-white/8">{typeLabels[bot.type]}</span>
+                <span className={`tag border ${riskColors[bot.risk]}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${riskDot[bot.risk]} mr-1.5`} />
+                  {riskLabels[bot.risk]} риск
+                </span>
+                {bot.exchanges.map(ex => (
+                  <span key={ex} className="tag bg-white/5 text-white/40 border border-white/8">{ex}</span>
+                ))}
+                {bot.tags.map(t => (
+                  <span key={t} className="tag bg-white/5 text-white/40 border border-white/8">{t}</span>
                 ))}
               </div>
-              <span className="text-white/50">{bot.rating} · {bot.reviews} отзывов</span>
+
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} className={`text-sm ${s <= Math.round(bot.rating) ? 'text-amber-400' : 'text-white/15'}`}>★</span>
+                    ))}
+                  </div>
+                  <span className="text-white/50">{bot.rating} · {bot.reviews} отзывов</span>
+                </div>
+                <span className="text-2xl font-bold font-display text-white">
+                  {bot.price === 0 ? (
+                    <span className="gradient-text text-xl">Бесплатно</span>
+                  ) : (
+                    <>${bot.price}<span className="text-sm font-normal text-white/40">/мес</span></>
+                  )}
+                </span>
+              </div>
             </div>
-            <span className="text-2xl font-bold font-display text-white">
-              {bot.price === 0 ? (
-                <span className="gradient-text text-xl">Бесплатно</span>
-              ) : (
-                <>${bot.price}<span className="text-sm font-normal text-white/40">/мес</span></>
-              )}
-            </span>
-          </div>
+          ) : (
+            <div className="relative">
+              <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/8">
+                <span className="text-xs text-white/40 font-mono">bot_strategy.py</span>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+                >
+                  <Icon name={copied ? 'Check' : 'Copy'} size={13} />
+                  {copied ? 'Скопировано!' : 'Копировать'}
+                </button>
+              </div>
+              <pre
+                className="p-4 text-xs font-mono leading-relaxed overflow-x-auto text-white/80 bg-[#0a0f16]"
+                dangerouslySetInnerHTML={{ __html: highlight(bot.codeSnippet) }}
+              />
+            </div>
+          )}
+        </div>
 
-          {/* actions */}
-          <div className="flex gap-2 pt-1">
-            {/* add to cart */}
-            <button
-              onClick={handleAddToCart}
-              disabled={inCart}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                inCart
-                  ? 'bg-white/5 border-white/10 text-white/30 cursor-default'
-                  : addedToCart
-                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                  : 'bg-white/5 border-white/15 text-white hover:bg-white/10'
-              }`}
-            >
-              <Icon name={inCart ? 'Check' : addedToCart ? 'Check' : 'ShoppingCart'} size={16} />
-              {inCart ? 'В корзине' : addedToCart ? 'Добавлено!' : 'В корзину'}
-            </button>
+        {/* actions */}
+        <div className="flex gap-2 p-5 pt-3 border-t border-white/8 flex-shrink-0">
+          <button
+            onClick={handleAddToCart}
+            disabled={inCart}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition-all ${
+              inCart
+                ? 'bg-white/5 border-white/10 text-white/30 cursor-default'
+                : addedToCart
+                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                : 'bg-white/5 border-white/15 text-white hover:bg-white/10'
+            }`}
+          >
+            <Icon name={inCart ? 'Check' : addedToCart ? 'Check' : 'ShoppingCart'} size={16} />
+            {inCart ? 'В корзине' : addedToCart ? 'Добавлено!' : 'В корзину'}
+          </button>
 
-            {/* connect exchange */}
-            <button
-              onClick={() => onConnect(bot)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border border-cyan-400/30 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20 transition-all"
-            >
-              <Icon name="Link" size={16} />
-              Подключить биржу
-            </button>
+          <button
+            onClick={() => onConnect(bot)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border border-cyan-400/30 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20 transition-all"
+          >
+            <Icon name="Link" size={16} />
+            Подключить биржу
+          </button>
 
-            {/* buy */}
-            <button
-              onClick={() => onCheckout(bot)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold btn-glow bg-[var(--neon-green)] text-black hover:brightness-110 transition-all"
-            >
-              <Icon name="Zap" size={16} />
-              Купить
-            </button>
-          </div>
+          <button
+            onClick={() => onCheckout(bot)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold btn-glow bg-[var(--neon-green)] text-black hover:brightness-110 transition-all"
+          >
+            <Icon name="Zap" size={16} />
+            Купить
+          </button>
         </div>
       </div>
     </div>
