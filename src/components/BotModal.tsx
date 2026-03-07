@@ -56,6 +56,16 @@ export default function BotModal({ bot, onClose, onCheckout, onConnect }: BotMod
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([bot.codeSnippet], { type: 'text/x-python' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${bot.name.replace(/\s+/g, '_').toLowerCase()}.py`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
@@ -154,14 +164,23 @@ export default function BotModal({ bot, onClose, onCheckout, onConnect }: BotMod
           ) : (
             <div className="relative">
               <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/8">
-                <span className="text-xs text-white/40 font-mono">bot_strategy.py</span>
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
-                >
-                  <Icon name={copied ? 'Check' : 'Copy'} size={13} />
-                  {copied ? 'Скопировано!' : 'Копировать'}
-                </button>
+                <span className="text-xs text-white/40 font-mono">{bot.name.replace(/\s+/g, '_').toLowerCase()}.py</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleDownload}
+                    className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+                  >
+                    <Icon name="Download" size={13} />
+                    Скачать .py
+                  </button>
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+                  >
+                    <Icon name={copied ? 'Check' : 'Copy'} size={13} />
+                    {copied ? 'Скопировано!' : 'Копировать'}
+                  </button>
+                </div>
               </div>
               <pre
                 className="p-4 text-xs font-mono leading-relaxed overflow-x-auto text-white/80 bg-[#0a0f16]"
