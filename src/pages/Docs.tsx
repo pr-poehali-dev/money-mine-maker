@@ -21,8 +21,8 @@ const steps = [
     id: 3,
     icon: 'Package',
     title: 'Установите зависимости',
-    description: 'Установите библиотеку ccxt для работы с биржами через pip:',
-    code: 'pip install ccxt numpy requests',
+    description: 'Откройте терминал (на Windows — Win+R → cmd, на Mac — Finder → Программы → Терминал) и введите команду ниже. Она скачает все нужные библиотеки автоматически:',
+    code: 'pip install ccxt numpy requests web3',
   },
   {
     id: 4,
