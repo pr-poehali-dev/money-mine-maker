@@ -2,6 +2,7 @@ import { Bot, riskLabels, typeLabels } from '@/data/bots';
 import Icon from '@/components/ui/icon';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface BotModalProps {
   bot: Bot | null;
@@ -166,6 +167,13 @@ export default function BotModal({ bot, onClose, onCheckout, onConnect }: BotMod
               <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/8">
                 <span className="text-xs text-white/40 font-mono">{bot.name.replace(/\s+/g, '_').toLowerCase()}.py</span>
                 <div className="flex items-center gap-3">
+                  <Link
+                    to="/docs"
+                    className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+                  >
+                    <Icon name="BookOpen" size={13} />
+                    Как запустить?
+                  </Link>
                   <button
                     onClick={handleDownload}
                     className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
