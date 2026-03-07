@@ -535,7 +535,7 @@ def place_trade(direction):
         json={'asset': ASSET, 'amount': AMOUNT,
               'direction': direction, 'duration': DURATION},
         headers={'Authorization': f'Bearer {API_KEY}'})
-    print(f"Trade placed: {direction.upper()}  ${AMOUNT}  {DURATION}s")
+    print(f"Trade placed: {direction.upper()}  \${AMOUNT}  {DURATION}s")
 
 def run():
     while True:
