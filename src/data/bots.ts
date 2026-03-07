@@ -176,6 +176,26 @@ export const bots: Bot[] = [
     gradient: 'from-cyan-500/20 to-sky-500/20',
     emoji: '🟢',
   },
+  {
+    id: 9,
+    name: 'PocketPulse Pro',
+    description: 'Автоматический бот для торговли бинарными опционами на Pocket Option. Анализирует волатильность и входит в сделки по сигналам RSI + Bollinger Bands. Сделки длительностью 1–5 минут.',
+    type: 'scalping',
+    risk: 'high',
+    roi: 184.6,
+    winRate: 72.3,
+    trades: 9814,
+    price: 59,
+    rating: 4.6,
+    reviews: 143,
+    author: 'PocketTeam',
+    tags: ['Pocket Option', 'бинарные опционы', 'RSI', 'Bollinger'],
+    exchanges: ['Pocket Option'],
+    isNew: true,
+    isPopular: true,
+    gradient: 'from-violet-500/20 to-fuchsia-500/20',
+    emoji: '💜',
+  },
 ];
 
 export const botTypes = [
